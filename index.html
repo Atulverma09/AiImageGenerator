@@ -1,0 +1,87 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Image Generator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 500px; }
+        h1 { color: #333; }
+        input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; }
+        button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        button:hover { background-color: #0056b3; }
+        #image-result { margin-top: 30px; min-height: 256px; display: flex; justify-content: center; align-items: center; border: 2px dashed #ccc; border-radius: 8px; }
+        #image-result img { max-width: 100%; border-radius: 6px; }
+        .loader { display: none; font-size: 18px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Text-to-Image Generator</h1>
+        <form id="generate-form">
+            <input type="text" id="prompt-input" placeholder="e.g., An astronaut riding a horse on Mars" required>
+            <button type="submit">Generate Image</button>
+        </form>
+        <div id="image-result">
+            <p class="loader" id="loader">Generating, please wait...</p>
+            <img id="generated-image" src="" alt="Generated Image">
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('generate-form');
+        const promptInput = document.getElementById('prompt-input');
+        const imageResultDiv = document.getElementById('image-result');
+        const loader = document.getElementById('loader');
+        const generatedImage = document.getElementById('generated-image');
+
+        // Backend URL (Jab live karenge toh isko change karenge)
+        const backendUrl = 'http://127.0.0.1:5001/generate';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Form ko refresh hone se roko
+
+            const prompt = promptInput.value;
+            if (!prompt) {
+                alert('Please enter a prompt.');
+                return;
+            }
+
+            // UI update karo
+            loader.style.display = 'block';
+            generatedImage.style.display = 'none';
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Image data ko blob me convert karo
+                const imageBlob = await response.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+
+                // Image dikhao
+                generatedImage.src = imageUrl;
+                generatedImage.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate image. Please check console for details.');
+            } finally {
+                // Loader ko hatao
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
